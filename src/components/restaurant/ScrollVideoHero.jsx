@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
-const VIDEO_MOBILE = '/kling_20260327_作品_shot_1_2s__1926_3.mp4';
+const VIDEO_MOBILE = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
 const DESKTOP_CONFIG = {

@@ -79,6 +79,12 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       canvas.width = w;
       canvas.height = h;
 
+      // Offscreen canvas for frame extraction — keeps display canvas clean
+      const offscreen = document.createElement('canvas');
+      offscreen.width = w;
+      offscreen.height = h;
+      const offCtx = offscreen.getContext('2d');
+
       const duration = video.duration;
       const totalFrames = config.frames;
 
@@ -90,8 +96,8 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       for (let i = 0; i < totalFrames; i += step) {
         if (cancelled) return;
         await seekToTime((i / (totalFrames - 1)) * duration);
-        ctx.drawImage(video, 0, 0, w, h);
-        sparseFrames[i] = await createImageBitmap(canvas);
+        offCtx.drawImage(video, 0, 0, w, h);
+        sparseFrames[i] = await createImageBitmap(offscreen);
         extracted++;
         setLoadProgress(Math.round((extracted / totalFrames) * 100));
       }
@@ -114,8 +120,8 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         if (cancelled) return;
         if (i % step === 0) continue; // already extracted
         await seekToTime((i / (totalFrames - 1)) * duration);
-        ctx.drawImage(video, 0, 0, w, h);
-        framesRef.current[i] = await createImageBitmap(canvas);
+        offCtx.drawImage(video, 0, 0, w, h);
+        framesRef.current[i] = await createImageBitmap(offscreen);
       }
     });
 

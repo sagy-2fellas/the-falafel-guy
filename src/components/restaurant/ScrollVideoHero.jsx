@@ -8,15 +8,15 @@ const VIDEO_MOBILE = '/kling_20260327_作品_shot_1_2s__1926_3.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
 const DESKTOP_CONFIG = {
-  frames: 120,
+  frames: 60,
   scrollHeight: 350, // vh
-  maxCanvasWidth: null, // use native resolution
+  maxCanvasWidth: 1280, // scale down from 1920 — faster extraction, no visible difference
 };
 
 const MOBILE_CONFIG = {
-  frames: 60,
+  frames: 30,
   scrollHeight: 300, // vh — snappier on touch
-  maxCanvasWidth: 720, // scale down to 720px wide
+  maxCanvasWidth: 540, // lightweight for mobile
 };
 
 export default function ScrollVideoHero({ onScrollToContact }) {
@@ -53,13 +53,23 @@ export default function ScrollVideoHero({ onScrollToContact }) {
 
     let cancelled = false;
 
+    const seekToTime = (time) =>
+      new Promise((resolve) => {
+        const onSeeked = () => {
+          video.removeEventListener('seeked', onSeeked);
+          resolve();
+        };
+        video.addEventListener('seeked', onSeeked);
+        video.currentTime = time;
+      });
+
     video.addEventListener('loadedmetadata', async () => {
       if (cancelled) return;
 
       let w = video.videoWidth;
       let h = video.videoHeight;
 
-      // Scale down on mobile to save memory
+      // Scale down to save memory and speed up extraction
       if (config.maxCanvasWidth && w > config.maxCanvasWidth) {
         const scale = config.maxCanvasWidth / w;
         w = Math.round(w * scale);
@@ -70,31 +80,43 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       canvas.height = h;
 
       const duration = video.duration;
-      const frames = [];
       const totalFrames = config.frames;
 
-      for (let i = 0; i < totalFrames; i++) {
+      // Phase 1: Extract every 4th frame for quick interactivity
+      const sparseFrames = new Array(totalFrames);
+      const step = 4;
+      let extracted = 0;
+
+      for (let i = 0; i < totalFrames; i += step) {
         if (cancelled) return;
-        const time = (i / (totalFrames - 1)) * duration;
-
-        await new Promise((resolve) => {
-          const onSeeked = () => {
-            video.removeEventListener('seeked', onSeeked);
-            resolve();
-          };
-          video.addEventListener('seeked', onSeeked);
-          video.currentTime = time;
-        });
-
+        await seekToTime((i / (totalFrames - 1)) * duration);
         ctx.drawImage(video, 0, 0, w, h);
-        const bitmap = await createImageBitmap(canvas);
-        frames.push(bitmap);
-        setLoadProgress(Math.round(((i + 1) / totalFrames) * 100));
+        sparseFrames[i] = await createImageBitmap(canvas);
+        extracted++;
+        setLoadProgress(Math.round((extracted / totalFrames) * 100));
       }
 
-      framesRef.current = frames;
-      ctx.drawImage(frames[0], 0, 0, w, h);
+      // Fill gaps with nearest extracted frame for immediate use
+      for (let i = 0; i < totalFrames; i++) {
+        if (!sparseFrames[i]) {
+          // Find nearest extracted frame
+          const prev = i - (i % step);
+          sparseFrames[i] = sparseFrames[prev];
+        }
+      }
+
+      framesRef.current = sparseFrames;
+      ctx.drawImage(sparseFrames[0], 0, 0, w, h);
       setIsReady(true);
+
+      // Phase 2: Fill in remaining frames in the background
+      for (let i = 0; i < totalFrames; i++) {
+        if (cancelled) return;
+        if (i % step === 0) continue; // already extracted
+        await seekToTime((i / (totalFrames - 1)) * duration);
+        ctx.drawImage(video, 0, 0, w, h);
+        framesRef.current[i] = await createImageBitmap(canvas);
+      }
     });
 
     return () => {

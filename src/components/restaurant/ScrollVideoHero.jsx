@@ -115,9 +115,9 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     const totalFrames = frames.length;
 
     const TEXT_BLOCKS = [
-      { start: 0.03, end: 0.22 },
-      { start: 0.24, end: 0.43 },
-      { start: 0.45, end: 0.62 },
+      { start: 0.02, end: 0.30 },
+      { start: 0.25, end: 0.50 },
+      { start: 0.45, end: 0.68 },
     ];
     const LOGO_CTA = { start: 0.65, end: 0.95 };
 
@@ -141,21 +141,37 @@ export default function ScrollVideoHero({ onScrollToContact }) {
           lastFrameIndex = frameIndex;
         }
 
-        // Keep canvas + overlay visible — the next section scrolls over them naturally
+        // Hide video background once the logo/banner is fully visible
+        const bannerVisible = fraction >= 0.73; // logo fade-in completes around here
+        canvas.style.opacity = bannerVisible ? '0' : '1';
+        if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
 
-        // Text blocks
+        // Text blocks — continuously slide from top to bottom, scroll-driven position
         textBlocksRef.current.forEach((el, i) => {
           if (!el) return;
           const { start, end } = TEXT_BLOCKS[i];
           if (fraction >= start && fraction <= end) {
             const p = (fraction - start) / (end - start);
-            const opacity = p < 0.3 ? p / 0.3 : p > 0.7 ? (1 - p) / 0.3 : 1;
-            const ty = (1 - Math.min(p / 0.3, 1)) * 30;
+
+            // Opacity: quick fade in at start, slow fade out at end
+            let opacity;
+            if (p < 0.1) {
+              opacity = p / 0.1;
+            } else if (p > 0.92) {
+              opacity = (1 - p) / 0.08;
+            } else {
+              opacity = 1;
+            }
+
+            // Position: slides from top of screen to bottom, driven by scroll
+            // At p=0 starts at -80px (above), at p=1 ends at +120px (below)
+            const ty = -80 + (p * 200);
+
             el.style.opacity = Math.max(0, Math.min(1, opacity));
             el.style.transform = `translateY(${ty}px)`;
           } else {
             el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
+            el.style.transform = fraction < start ? 'translateY(-80px)' : 'translateY(120px)';
           }
         });
 
@@ -233,7 +249,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         {/* Text block 1 — left */}
         <div
           ref={el => (textBlocksRef.current[0] = el)}
-          style={{ position: 'fixed', bottom: '15%', left: 0, zIndex: 3, padding: '0 8%', textAlign: 'left', opacity: 0, willChange: 'transform, opacity' }}
+          style={{ position: 'fixed', top: '50%', left: 0, zIndex: 3, padding: '0 8%', textAlign: 'left', opacity: 0, willChange: 'transform, opacity' }}
         >
           <h2 style={{ color: '#F8D09F' }} className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
             Not Just The Best Deal
@@ -244,7 +260,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         {/* Text block 2 — right */}
         <div
           ref={el => (textBlocksRef.current[1] = el)}
-          style={{ position: 'fixed', bottom: '15%', right: 0, zIndex: 3, padding: '0 8%', textAlign: 'right', opacity: 0, willChange: 'transform, opacity' }}
+          style={{ position: 'fixed', top: '50%', right: 0, zIndex: 3, padding: '0 8%', textAlign: 'right', opacity: 0, willChange: 'transform, opacity' }}
         >
           <h2 style={{ color: '#F8D09F' }} className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
             HALAAL
@@ -257,7 +273,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         {/* Text block 3 — left */}
         <div
           ref={el => (textBlocksRef.current[2] = el)}
-          style={{ position: 'fixed', bottom: '15%', left: 0, zIndex: 3, padding: '0 8%', textAlign: 'left', opacity: 0, willChange: 'transform, opacity' }}
+          style={{ position: 'fixed', top: '50%', left: 0, zIndex: 3, padding: '0 8%', textAlign: 'left', opacity: 0, willChange: 'transform, opacity' }}
         >
           <h2 style={{ color: '#F8D09F' }} className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
             Served Fresh

@@ -31,10 +31,10 @@ const socialLinks = [
 ];
 
 const navLinks = [
-  { label: "Home", to: "/" },
-  { label: "Menu", to: "/Menu" },
-  { label: "Catering", to: "/Catering" },
-  { label: "Feedback", to: "/Feedback" },
+  { label: "Home", to: createPageUrl("Home") },
+  { label: "Menu", to: createPageUrl("Menu") },
+  { label: "Catering", to: createPageUrl("Catering") },
+  { label: "Feedback", to: createPageUrl("Feedback") },
 ];
 
 export default function Footer() {
@@ -127,6 +127,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     to={link.to}
+                    onClick={() => window.scrollTo(0, 0)}
                     className="text-white/60 text-sm font-light hover:text-[#F8D09F] transition-colors duration-300"
                   >
                     {link.label}

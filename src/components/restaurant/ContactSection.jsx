@@ -1,9 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Phone, Mail, Instagram, Facebook, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '../../utils';
+import { MapPin, Clock, Phone } from 'lucide-react';
 
 const locations = [
   {
@@ -23,13 +20,6 @@ const locations = [
     weekendHours: "Tue-Sun: 11:00am - 8:00pm",
     phone: "0790268722"
   }
-];
-
-const socialLinks = [
-  { icon: Instagram, url: "https://www.instagram.com/thefalafelguysa", label: "Instagram", type: "icon" },
-  { icon: Facebook, url: "https://www.facebook.com/thefalafelguy", label: "Facebook", type: "icon" },
-  { icon: "/images/tiktok-icon.png", url: "https://www.tiktok.com/@thefalafelguy", label: "TikTok", type: "image" },
-  { icon: MessageCircle, url: "https://wa.me/27726606526", label: "WhatsApp", type: "icon" },
 ];
 
 export default function ContactSection() {
@@ -119,69 +109,6 @@ export default function ContactSection() {
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          viewport={{ once: true }}
-          className="mt-12 sm:mt-20 text-center"
-        >
-          <div className="w-full h-px mb-8 sm:mb-12" style={{ background: 'linear-gradient(to right, transparent, #F8D09F50, transparent)' }} />
-          
-          {/* Email Button */}
-          <div className="flex justify-center mb-6 sm:mb-8 px-4">
-            <Button
-              onClick={() => window.location.href = 'mailto:hello@thefalafelguy.co.za'}
-              className="w-full sm:w-auto text-black font-semibold px-4 sm:px-10 py-3 sm:py-5 text-xs sm:text-base rounded-none transition-all duration-300 transform hover:scale-105 group"
-              style={{ background: 'linear-gradient(to right, #F8D09F, #E5BD88)', border: 'none' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #E5BD88, #F8D09F)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(to right, #F8D09F, #E5BD88)'}
-            >
-              <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              EMAIL US
-            </Button>
-          </div>
-
-          {/* Social Links */}
-          <div className="flex justify-center gap-4 sm:gap-6 mb-8 sm:mb-12">
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 group"
-                style={{ borderColor: '#F8D09F50' }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#F8D09F'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = '#F8D09F50'}
-                aria-label={social.label}
-              >
-                {social.type === "image" ? (
-                  <img 
-                    src={social.icon} 
-                    alt={social.label}
-                    className="w-5 h-5 sm:w-6 sm:h-6 group-hover:opacity-80 transition-opacity"
-                  />
-                ) : (
-                  <social.icon className="w-5 h-5 sm:w-6 sm:h-6 group-hover:opacity-80 transition-opacity" style={{ color: '#F8D09F' }} />
-                )}
-              </a>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
-            <p className="text-white/40 text-xs sm:text-sm font-light">
-              © 2025 The Falafel Guy. DD Holdings Co Pty Ltd. All rights reserved.
-            </p>
-            <span className="hidden sm:inline text-white/20">|</span>
-            <Link 
-              to={createPageUrl('PrivacyPolicy')}
-              className="text-white/40 hover:text-[#F8D09F] text-xs sm:text-sm font-light transition-colors duration-300"
-            >
-              Privacy Policy (POPIA)
-            </Link>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

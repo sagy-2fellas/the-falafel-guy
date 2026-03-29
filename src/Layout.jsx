@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import Navigation from './components/restaurant/Navigation';
+import Footer from './components/restaurant/Footer';
 import PrivacyPopup from './components/restaurant/PrivacyPopup';
 
 const PAGE_TITLES = {
   Home: 'The Falafel Guy | Halaal Middle Eastern Streatery — Sea Point, Cape Town',
+  Menu: 'Menu | The Falafel Guy — Halaal Middle Eastern Streatery',
   Catering: 'Catering | The Falafel Guy — Middle Eastern Catering in Cape Town',
   Feedback: 'Feedback | The Falafel Guy — Share Your Experience',
   PrivacyPolicy: 'Privacy Policy | The Falafel Guy',
@@ -39,6 +41,7 @@ export default function Layout({ children, currentPageName }) {
       `}} />
       <Navigation />
       {children}
+      <Footer />
       <PrivacyPopup />
     </div>
   );

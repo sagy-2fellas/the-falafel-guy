@@ -6,9 +6,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
-// Mobile: pre-extracted JPG frames — img swap approach (GPU composited)
+// Mobile: pre-extracted JPG frames
 const MOBILE_FRAME_PATH = '/ezgif-580dc0767016926f-jpg/ezgif-frame-';
-const MOBILE_FRAME_COUNT = 40; // use every 2nd frame — 40 is plenty for smooth scrolling
+const MOBILE_FRAME_COUNT = 80; // all frames for smoothest animation
 
 const DESKTOP_CONFIG = {
   frames: 60,
@@ -55,9 +55,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
 
       for (let i = 0; i < totalFrames; i++) {
         const img = new Image();
-        // Use every 2nd source frame (001, 003, 005...) for 40 frames from 80 source files
-        const srcIndex = i * 2 + 1;
-        const num = String(srcIndex).padStart(3, '0');
+        const num = String(i + 1).padStart(3, '0');
         img.src = `${MOBILE_FRAME_PATH}${num}.jpg`;
         img.onload = () => {
           if (cancelled) return;
@@ -66,10 +64,12 @@ export default function ScrollVideoHero({ onScrollToContact }) {
           setLoadProgress(Math.round((loaded / totalFrames) * 100));
           if (loaded === totalFrames) {
             framesRef.current = loadedFrames;
-            // Set canvas to match image dimensions
-            canvas.width = loadedFrames[0].naturalWidth;
-            canvas.height = loadedFrames[0].naturalHeight;
-            ctx.drawImage(loadedFrames[0], 0, 0);
+            // Scale canvas for retina — crisp rendering on high-DPI screens
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = loadedFrames[0].naturalWidth * dpr;
+            canvas.height = loadedFrames[0].naturalHeight * dpr;
+            ctx.scale(dpr, dpr);
+            ctx.drawImage(loadedFrames[0], 0, 0, loadedFrames[0].naturalWidth, loadedFrames[0].naturalHeight);
             setIsReady(true);
           }
         };
@@ -181,14 +181,18 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     let currentFraction = 0;
     let lastFrameIndex = -1;
     let animId = 0;
-    // Smoothing factor: lower = smoother but more lag. 0.12 feels natural on mobile.
-    const LERP_SPEED = isMobile ? 0.12 : 0.2;
+    // Smoothing factor: lower = smoother but more lag
+    const LERP_SPEED = isMobile ? 0.08 : 0.2;
+
+    // For retina-scaled canvas, draw at logical (pre-scale) dimensions
+    const drawW = isMobile && frames[0]?.naturalWidth ? frames[0].naturalWidth : canvas.width;
+    const drawH = isMobile && frames[0]?.naturalHeight ? frames[0].naturalHeight : canvas.height;
 
     const updateVisuals = (fraction) => {
       // Paint frame
       const frameIndex = Math.min(totalFrames - 1, Math.max(0, Math.round(fraction * (totalFrames - 1))));
       if (frameIndex !== lastFrameIndex) {
-        ctx.drawImage(frames[frameIndex], 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(frames[frameIndex], 0, 0, drawW, drawH);
         lastFrameIndex = frameIndex;
       }
 

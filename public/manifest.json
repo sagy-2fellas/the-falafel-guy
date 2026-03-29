@@ -1,0 +1,16 @@
+{
+  "name": "The Falafel Guy",
+  "short_name": "Falafel Guy",
+  "description": "Strictly Halaal Authentic Middle Eastern Streatery in Sea Point, Cape Town",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "icons": [
+    {
+      "src": "/image_1774566475171_khgncb.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

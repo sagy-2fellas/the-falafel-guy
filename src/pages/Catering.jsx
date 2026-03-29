@@ -5,7 +5,7 @@ import { Users, Calendar, Award, CheckCircle, Mail, Phone, Send } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { base44 } from '@/api/base44Client';
+import emailjs from '@emailjs/browser';
 import { format } from 'date-fns';
 
 export default function Catering() {
@@ -31,97 +31,22 @@ export default function Catering() {
     setIsSubmitting(true);
     
     try {
-      const formattedEventDate = formData.eventDate 
-        ? format(new Date(formData.eventDate), 'dd/MM/yyyy') 
+      const formattedEventDate = formData.eventDate
+        ? format(new Date(formData.eventDate), 'dd/MM/yyyy')
         : 'Not provided';
 
-      const emailBody = `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; margin: 0; }
-        .container { background-color: #ffffff; border-radius: 8px; padding: 30px; max-width: 650px; margin: auto; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        h2 { color: #F8D09F; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 24px; font-weight: bold; }
-        .field { margin-bottom: 20px; }
-        .field-label { font-weight: bold; color: #555; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .field-value { padding: 12px; background-color: #f9f9f9; border-radius: 4px; border-left: 3px solid #F8D09F; font-size: 16px; line-height: 1.5; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #888; font-size: 12px; }
-        a { color: #F8D09F; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>New Catering Inquiry!</h2>
-        
-        ${formData.companyName ? `
-        <div class="field">
-            <div class="field-label">Company/Organization:</div>
-            <div class="field-value">${formData.companyName}</div>
-        </div>
-        ` : ''}
-        
-        <div class="field">
-            <div class="field-label">Contact Person:</div>
-            <div class="field-value">${formData.contactPerson}</div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Email:</div>
-            <div class="field-value"><a href="mailto:${formData.email}">${formData.email}</a></div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Phone:</div>
-            <div class="field-value">${formData.phone}</div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Event Type:</div>
-            <div class="field-value">${formData.eventType}</div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Expected Guests:</div>
-            <div class="field-value">${formData.guestCount}</div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Event Date:</div>
-            <div class="field-value">${formattedEventDate}</div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Message:</div>
-            <div class="field-value">${formData.message.replace(/\n/g, '<br>')}</div>
-        </div>
-        
-        <div class="footer">
-            <p>This catering inquiry was submitted via The Falafel Guy website.</p>
-            <p>Submission time: ${new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}</p>
-        </div>
-    </div>
-</body>
-</html>
-      `;
+      await emailjs.send('service_626fsx8', 'template_b2fwdmt', {
+        name: formData.contactPerson,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.companyName || '',
+        eventDate: formattedEventDate,
+        eventType: formData.eventType,
+        numberOfGuests: formData.guestCount,
+        message: formData.message,
+        submissionTime: new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }),
+      }, 'Ln47pmBh5mYB9EIs9');
 
-      // Send to first email
-      await base44.integrations.Core.SendEmail({
-        to: 'pitapocketsa@gmail.com',
-        subject: `Catering Inquiry from ${formData.companyName || formData.contactPerson}`,
-        body: emailBody,
-        from_name: 'The Falafel Guy Catering'
-      });
-
-      // Send to second email
-      await base44.integrations.Core.SendEmail({
-        to: 'hello@thefalafelguy.co.za',
-        subject: `Catering Inquiry from ${formData.companyName || formData.contactPerson}`,
-        body: emailBody,
-        from_name: 'The Falafel Guy Catering'
-      });
-      
       setIsSubmitted(true);
       setTimeout(() => {
         setFormData({

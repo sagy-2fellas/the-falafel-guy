@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { base44 } from '@/api/base44Client';
+import emailjs from '@emailjs/browser';
 
 export default function FeedbackForm({ onClose }) {
   const [formData, setFormData] = useState({
@@ -25,92 +25,24 @@ export default function FeedbackForm({ onClose }) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
-      // Save feedback to database
-      await base44.entities.Feedback.create(formData);
-      
-      // Send email notification
-      const emailBody = `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; margin: 0; }
-        .container { background-color: #ffffff; border-radius: 8px; padding: 30px; max-width: 650px; margin: auto; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        h2 { color: #F8D09F; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 24px; font-weight: bold; }
-        .field { margin-bottom: 20px; }
-        .field-label { font-weight: bold; color: #555; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .field-value { padding: 12px; background-color: #f9f9f9; border-radius: 4px; border-left: 3px solid #F8D09F; font-size: 16px; line-height: 1.5; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #888; font-size: 12px; }
-        .rating-stars { color: #F8D09F; font-size: 20px; }
-        a { color: #F8D09F; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>New Customer Feedback!</h2>
-        
-        <div class="field">
-            <div class="field-label">Name:</div>
-            <div class="field-value">${formData.name}</div>
-        </div>
-        
-        <div class="field">
-            <div class="field-label">Email:</div>
-            <div class="field-value"><a href="mailto:${formData.email}">${formData.email}</a></div>
-        </div>
-        
-        ${formData.phone ? `
-        <div class="field">
-            <div class="field-label">Phone:</div>
-            <div class="field-value">${formData.phone}</div>
-        </div>
-        ` : ''}
+      await emailjs.send('service_626fsx8', 'template_mdpstab', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || '',
+        location: formData.location,
+        rating: formData.rating,
+        message: formData.message,
+      }, 'Ln47pmBh5mYB9EIs9');
 
-        <div class="field">
-            <div class="field-label">Location:</div>
-            <div class="field-value">${formData.location}</div>
-        </div>
-        
-        ${formData.rating > 0 ? `
-        <div class="field">
-            <div class="field-label">Rating:</div>
-            <div class="field-value">
-                <span class="rating-stars">${'⭐'.repeat(formData.rating)}</span> (${formData.rating}/5)
-            </div>
-        </div>
-        ` : ''}
-
-        <div class="field">
-            <div class="field-label">Message:</div>
-            <div class="field-value">${formData.message.replace(/\n/g, '<br>')}</div>
-        </div>
-        
-        <div class="footer">
-            <p>This feedback was submitted via The Falafel Guy website.</p>
-            <p>Submission time: ${new Date().toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' })}</p>
-        </div>
-    </div>
-</body>
-</html>
-      `;
-      
-      await base44.integrations.Core.SendEmail({
-        to: 'hello@thefalafelguy.co.za',
-        subject: `New Feedback from ${formData.name} - ${formData.location}`,
-        body: emailBody,
-        from_name: 'The Falafel Guy Website'
-      });
-      
       setIsSubmitted(true);
       setTimeout(() => {
         onClose();
       }, 3000);
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      setError(error?.message || 'Failed to submit feedback. Please try again.');
+      setError('Failed to submit feedback. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -18,7 +18,7 @@ const DESKTOP_CONFIG = {
 
 const MOBILE_CONFIG = {
   frames: MOBILE_FRAME_COUNT,
-  scrollHeight: 300, // vh — snappier on touch
+  scrollHeight: 200, // vh — completes in ~one full scroll
 };
 
 export default function ScrollVideoHero({ onScrollToContact }) {

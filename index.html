@@ -33,6 +33,56 @@
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- Restaurant Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "The Falafel Guy",
+      "description": "Strictly Halaal authentic Middle Eastern streatery in Sea Point, Cape Town. Falafel, shawarma, and more.",
+      "url": "https://thefalafelguy.co.za",
+      "telephone": "+27210150090",
+      "email": "hello@thefalafelguy.co.za",
+      "servesCuisine": ["Middle Eastern", "Mediterranean", "Halaal"],
+      "priceRange": "$$",
+      "image": "https://thefalafelguy.co.za/image_1774566475171_khgncb.png",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "152 Main Road",
+        "addressLocality": "Sea Point",
+        "addressRegion": "Western Cape",
+        "postalCode": "8005",
+        "addressCountry": "ZA"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -33.9175,
+        "longitude": 18.3833
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "09:00",
+          "closes": "23:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Saturday", "Sunday"],
+          "opens": "09:00",
+          "closes": "23:30"
+        }
+      ],
+      "sameAs": [
+        "https://www.instagram.com/thefalafelguysa",
+        "https://www.facebook.com/thefalafelguy",
+        "https://www.tiktok.com/@thefalafelguy"
+      ],
+      "acceptsReservations": false,
+      "menu": "https://thefalafelguy.co.za/#menu"
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

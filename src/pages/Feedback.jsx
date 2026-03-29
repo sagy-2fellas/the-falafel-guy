@@ -21,7 +21,7 @@ export default function Feedback() {
       <div 
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: 'url(https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f5388d79c5fe5a86e4444a/d302dd2d5_1761246339464dar0o91x.png)',
+          backgroundImage: 'url(/images/hero-background.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'

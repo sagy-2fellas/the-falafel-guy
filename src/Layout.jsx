@@ -2,7 +2,18 @@ import React, { useEffect } from 'react';
 import Navigation from './components/restaurant/Navigation';
 import PrivacyPopup from './components/restaurant/PrivacyPopup';
 
+const PAGE_TITLES = {
+  Home: 'The Falafel Guy | Halaal Middle Eastern Streatery — Sea Point, Cape Town',
+  Catering: 'Catering | The Falafel Guy — Middle Eastern Catering in Cape Town',
+  Feedback: 'Feedback | The Falafel Guy — Share Your Experience',
+  PrivacyPolicy: 'Privacy Policy | The Falafel Guy',
+};
+
 export default function Layout({ children, currentPageName }) {
+  useEffect(() => {
+    document.title = PAGE_TITLES[currentPageName] || 'The Falafel Guy | Halaal Middle Eastern Streatery';
+  }, [currentPageName]);
+
   useEffect(() => {
     // Load Microsoft Clarity
     const script = document.createElement('script');

@@ -28,7 +28,7 @@ const locations = [
 const socialLinks = [
   { icon: Instagram, url: "https://www.instagram.com/thefalafelguysa", label: "Instagram", type: "icon" },
   { icon: Facebook, url: "https://www.facebook.com/thefalafelguy", label: "Facebook", type: "icon" },
-  { icon: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f5388d79c5fe5a86e4444a/492cc88bf_Humanfirelogos.png", url: "https://www.tiktok.com/@thefalafelguy", label: "TikTok", type: "image" },
+  { icon: "/images/tiktok-icon.png", url: "https://www.tiktok.com/@thefalafelguy", label: "TikTok", type: "image" },
   { icon: MessageCircle, url: "https://wa.me/27726606526", label: "WhatsApp", type: "icon" },
 ];
 

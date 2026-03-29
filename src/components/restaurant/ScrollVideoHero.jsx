@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
-const VIDEO_MOBILE = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
+const VIDEO_MOBILE = '/kling_20260329_作品_Cinematic__4534_3.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
 const DESKTOP_CONFIG = {
@@ -24,6 +24,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   const containerRef = useRef(null);
   const textBlocksRef = useRef([]);
   const logoCtaRef = useRef(null);
+  const introRef = useRef(null);
   const scrollIndicatorRef = useRef(null);
   const overlayRef = useRef(null);
   const framesRef = useRef([]);
@@ -174,6 +175,17 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         canvas.style.opacity = bannerVisible ? '0' : '1';
         if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
 
+        // Intro tagline — visible on load, fades out as scroll begins
+        if (introRef.current) {
+          if (fraction <= 0.02) {
+            introRef.current.style.opacity = '1';
+          } else if (fraction <= 0.08) {
+            introRef.current.style.opacity = String(1 - (fraction - 0.02) / 0.06);
+          } else {
+            introRef.current.style.opacity = '0';
+          }
+        }
+
         // Text blocks — continuously slide from top to bottom, scroll-driven position
         textBlocksRef.current.forEach((el, i) => {
           if (!el) return;
@@ -268,11 +280,35 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       {/* Dark overlay */}
       <div
         ref={overlayRef}
-        style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.1)', pointerEvents: 'none' }}
       />
 
       {/* Scroll container */}
       <div ref={containerRef} style={{ position: 'relative', zIndex: 2, height: `${config.scrollHeight}vh` }}>
+
+        {/* Intro tagline — visible on load */}
+        <div
+          ref={introRef}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '0 8%',
+            willChange: 'opacity',
+          }}
+        >
+          <h1 style={{ color: '#F8D09F' }} className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
+            The Falafel Guy
+          </h1>
+          <p className="text-xl sm:text-2xl text-white/90 font-light">
+            Sea Point's Authentic Middle Eastern Streatery
+          </p>
+        </div>
 
         {/* Text block 1 — left */}
         <div

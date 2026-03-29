@@ -42,6 +42,7 @@ export default function Navigation() {
 
   const navLinks = [
     { label: 'Home', action: scrollToTop, type: 'scroll' },
+    { label: 'Menu', to: createPageUrl('Menu'), type: 'link' },
     { label: 'Gallery', action: () => scrollToSection('menu'), type: 'scroll' },
     { label: 'Reviews', action: () => scrollToSection('reviews'), type: 'scroll' },
     { label: 'Contact', action: () => scrollToSection('contact'), type: 'scroll' },

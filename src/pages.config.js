@@ -50,6 +50,7 @@
 import Catering from './pages/Catering';
 import Feedback from './pages/Feedback';
 import Home from './pages/Home';
+import Menu from './pages/Menu';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import __Layout from './Layout.jsx';
 
@@ -58,6 +59,7 @@ export const PAGES = {
     "Catering": Catering,
     "Feedback": Feedback,
     "Home": Home,
+    "Menu": Menu,
     "PrivacyPolicy": PrivacyPolicy,
 }
 

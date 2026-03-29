@@ -4,74 +4,125 @@ import { motion } from 'framer-motion';
 import MenuItemCard from './MenuItemCard';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const IMG = "/images/menu/flat";
+
 const menuData = {
-  "Pitas": [
-    { name: "Falafel Pita", price: "R95.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d9831e03-eab3-48c8-a766-1b7a8bbff542.png" },
-    { name: "Chicken Shawarma Pita", price: "R89.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_ae023c2d-dc1f-4b6c-b707-23802af8acef.png" },
-    { name: "Beef Shawarma Pita", price: "R129.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_3f0cdbae-4de4-4379-ae5b-8284f01b8a53.png" },
-    { name: "Chicken Tenders Pita", price: "R110.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_232219af-3482-4211-a58a-9effee06c2e3.png" },
-    { name: "Brinjal Pita (Sabich)", price: "R90.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_359d1e08-4c52-4845-a970-8f34b4ed0de6.png" },
-    { name: "Hummus Pita", price: "R85.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_c27e641f-e298-420d-bd80-12fa7be2f4e5.png" },
-    { name: "Falafel Pita", price: "R105.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d9831e03-eab3-48c8-a766-1b7a8bbff542.png" },
-    { name: "Brinjal Pita (Sabich)", price: "R95.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_359d1e08-4c52-4845-a970-8f34b4ed0de6.png" },
-    { name: "Chicken Shawarma Pita", price: "R125.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_ae023c2d-dc1f-4b6c-b707-23802af8acef.png" },
-    { name: "Chicken Tenders Pita", price: "R125.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_232219af-3482-4211-a58a-9effee06c2e3.png" },
-    { name: "Beef Shawarma Pita", price: "R139.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_3f0cdbae-4de4-4379-ae5b-8284f01b8a53.png" },
-    { name: "Hummus Pita", price: "R89.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_c27e641f-e298-420d-bd80-12fa7be2f4e5.png" },
+  "Pita Sandwich": [
+    { name: "Falafel", price: "R105", description: "Includes hardboiled egg", image: `${IMG}/pita-falafel-pita.jpg` },
+    { name: "Chicken Shawarma", price: "R125", image: `${IMG}/pita-chicken-shawarma.jpg` },
+    { name: "Beef Shawarma", price: "R139", image: `${IMG}/pita-beef-shawarma.jpg` },
+    { name: "Chicken Tenders", price: "R125", image: `${IMG}/pita-schnitzel-pita.jpg` },
+    { name: "Hummus", price: "R89", image: `${IMG}/pita-hummus-pita.jpg` },
+    { name: "Brinjal", price: "R95", description: "Includes hardboiled egg", image: `${IMG}/pita-brinjal-pita.jpg` },
   ],
-  "Laffa": [
-    { name: "Falafel Laffa", price: "R145.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d9d31a34-cd4c-4783-8325-bba083fd6cea.png" },
-    { name: "Beef Shawarma Laffa", price: "R189.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_7f2094bf-7be3-44a0-ad50-b74adf57d073.png" },
-    { name: "Falafel Laffa", price: "R135.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d9d31a34-cd4c-4783-8325-bba083fd6cea.png" },
-    { name: "Beef Shawarma Laffa", price: "R175.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_7f2094bf-7be3-44a0-ad50-b74adf57d073.png" },
-    { name: "Brinjal Laffa (Sabich)", price: "R130.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_359d1e08-4c52-4845-a970-8f34b4ed0de6.png" },
-    { name: "Chicken Shawarma Laffa", price: "R165.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_6738284c-b51b-4445-b56a-2d18e2d537d8.png" },
-    { name: "Chicken Tenders Laffa", price: "R165.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d02b3bf6-a466-4a17-a4e4-2789639622e9.png" },
-    { name: "Chicken Shawarma Laffa", price: "R175.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_6738284c-b51b-4445-b56a-2d18e2d537d8.png" },
-    { name: "Chicken Tenders Laffa", price: "R175.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d02b3bf6-a466-4a17-a4e4-2789639622e9.png" },
-    { name: "Brinjal Laffa (Sabich)", price: "R133.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_359d1e08-4c52-4845-a970-8f34b4ed0de6.png" },
+  "Laffa Sandwich": [
+    { name: "Falafel", price: "R145", image: `${IMG}/laffa-falafel-laffa.jpg` },
+    { name: "Chicken Shawarma", price: "R175", image: `${IMG}/laffa-chicken-shawarma-laffa.jpg` },
+    { name: "Beef Shawarma", price: "R189", image: `${IMG}/laffa-beef-laffa.jpg` },
+    { name: "Chicken Tenders", price: "R175", image: `${IMG}/laffa-tenders-laffa.jpg` },
+    { name: "Brinjal", price: "R135", image: `${IMG}/laffa-whatsapp-image-2021-07-13-at-16.59.56.jpeg` },
   ],
-  "Combo Meals": [
-    { name: "Falafel Pita Combo", price: "R159.00", image: "https://images.unsplash.com/photo-1562967914-01efa7e87832?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Falafel Laffa Combo", price: "R199.00", image: "https://images.unsplash.com/photo-1594212699903-ec8a6e502de6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Beef Shawarma Pita Combo", price: "R195.00", image: "https://images.unsplash.com/photo-1606013624469-c06b7a873def?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Beef Shawarma Laffa Combo", price: "R245.00", image: "https://images.unsplash.com/photo-1560781297-579525426374?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Brinjal Pita Combo", price: "R155.00", image: "https://images.unsplash.com/photo-1621294833219-5a8a1e3e7f3c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Brinjal Laffa Combo", price: "R195.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
-    { name: "Chicken Shawarma Pita Combo", price: "R185.00", image: "https://images.unsplash.com/photo-1606013624469-c06b7a873def?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Chicken Shawarma Laffa Combo", price: "R235.00", image: "https://images.unsplash.com/photo-1560781297-579525426374?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Chicken Tenders Pita Combo", price: "R185.00", image: "https://images.unsplash.com/photo-1625944230942-7115a434e27e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Chicken Tenders Laffa Combo", price: "R235.00", image: "https://images.unsplash.com/photo-1560781297-579525426374?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Chicken Shawarma Laffa Combo", price: "R235.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
+  "Mezze Pitas": [
+    { name: "Mezze Falafel Pita", price: "R55", image: `${IMG}/mezze-falafel-pita.jpg` },
+    { name: "Mezze Chicken Shawarma Pita", price: "R60", image: `${IMG}/mezze-chicken-shawarma.jpg` },
+    { name: "Mezze Beef Shawarma Pita", price: "R65", image: `${IMG}/pita-beef-shawarma.jpg` },
+    { name: "Mezze Schnitzel Pita", price: "R65", image: `${IMG}/pita-schnitzel-pita.jpg` },
+    { name: "Four Play", price: "R225", description: "All four mezze pitas", image: `${IMG}/mezze-falafel-pita.jpg` },
   ],
-  "Half Pita Combos": [
-    { name: "Half Falafel Combo", price: "R105.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_d9831e03-eab3-48c8-a766-1b7a8bbff542.png" },
-    { name: "Half Beef Shawarma Combo", price: "R115.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_3f0cdbae-4de4-4379-ae5b-8284f01b8a53.png" },
-    { name: "Half Chicken Shawarma", price: "R105.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_ae023c2d-dc1f-4b6c-b707-23802af8acef.png" },
-    { name: "Half Chicken Tenders Combo", price: "R105.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_232219af-3482-4211-a58a-9effee06c2e3.png" },
-    { name: "Half Sabich Combo", price: "R105.00", image: "https://s3.eu-west-1.amazonaws.com/com.ikentoo.prod.rich-content-store/5742_359d1e08-4c52-4845-a970-8f34b4ed0de6.png" },
+  "Starters": [
+    { name: "Jalapeno Poppers (3)", price: "R89", description: "Jalapeno stuffed with cream & cheddar cheese coated in pita bread crumbs", image: `${IMG}/starter-chili-poppers.jpg` },
+    { name: "Cocktail Wings (8)", price: "R89", description: "Your choice of sauce: BBQ, buffalo or peri-peri", image: `${IMG}/starter-cocktail-wings.jpeg` },
+    { name: "Falafel Balls (6)", price: "R49", image: `${IMG}/starter-6x-falafel-balls.jpg` },
+    { name: "Chicken Tenders (4)", price: "R65", description: "Four crumbed chicken tenderloins", image: `${IMG}/starter-extra-chicekn-shnitzel.jpg` },
+    { name: "Corn Dog (1)", price: "R65", description: "Battered coated deep fried hotdog" },
+    { name: "Hummus", price: "R59", description: "Silky smooth chickpea spread", image: `${IMG}/deli-hummus-250ml.jpg` },
+    { name: "Tahini", price: "R65", description: "Traditional sesame seed dip made the vegan way" },
+    { name: "Pickles", price: "R40", description: "Pickled red cabbage, cucumber, chili or a mix of all three" },
+    { name: "Chopped Salad", price: "R70", description: "Freshly hand diced tomato, cucumber, lettuce, cabbage", image: `${IMG}/starter-side-salad.jpg` },
+    { name: "Fried Brinjal", price: "R45", description: "Soft peeled fried eggplant" },
+    { name: "Crispy Potato Bites", price: "R50", description: "AKA Potato Crack - imagine crispy chips and potato wedges had a baby", image: `${IMG}/starter-crispy-potato-bites.jpg` },
+    { name: "Thick Cut Fries", price: "R50", description: "Steak house thick cut chips" },
+    { name: "Sweet Potato Fries", price: "R65", description: "Sweet potato chips" },
+    { name: "Beef Shawarma (portion)", price: "R79", description: "A portion of our beef shawarma", image: `${IMG}/starter-extra-beef-shawarma.jpg` },
+    { name: "Chicken Shawarma (portion)", price: "R69", description: "A portion of our chicken shawarma", image: `${IMG}/starter-extra-chicken-shawarma.jpg` },
+    { name: "Single Laffa", price: "R19", description: "Iraqi flat bread", image: `${IMG}/deli-laffa.jpg` },
+    { name: "Single Pita", price: "R12", description: "Fluffy cloudy dreamy pita", image: `${IMG}/deli-single-pita.jpg` },
   ],
   "Plates": [
-    { name: "Falafel Plate", price: "R135.00", image: "https://images.unsplash.com/photo-1627404512015-68494b283196?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Chicken Tenders Plate", price: "R150.00", image: "https://images.unsplash.com/photo-1562967914-608f82629710?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "5 Loyalty Wings Plate 10 pieces", price: "R160.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
-    { name: "Beef Shawarma Plate", price: "R160.00", image: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Chicken Shawarma Plate", price: "R150.00", image: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Wings Plate 10 pieces", price: "R165.00", image: "https://images.unsplash.com/photo-1527477396000-e27173d0c431?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
+    { name: "Falafel Plate", price: "R135", tag: "Vegan & Gluten Free", image: `${IMG}/plate-falafel-plate-_24.jpg` },
+    { name: "Chicken Shawarma Plate", price: "R170", tag: "Gluten Free", image: `${IMG}/plate-chick-plate-_24.jpg` },
+    { name: "Beef Shawarma Plate", price: "R180", tag: "Gluten Free", image: `${IMG}/plate-beef-plate-_24.jpg` },
+    { name: "Chicken Tenders Plate", price: "R165", image: `${IMG}/plate-schnitz-plate-2-_24.jpg` },
+    { name: "Chicken Wings Plate", price: "R165", tag: "Gluten Free", description: "Your choice of sauce: BBQ, buffalo or peri-peri", image: `${IMG}/plate-wings-plate.jpg` },
   ],
   "Hummus Bowls": [
-    { name: "Chicken Shawarma Hummus Bowl", price: "R159.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
-    { name: "Beef Shawarma Hummus bowl", price: "R169.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
-    { name: "5Loyalty Vegan Hummus Bowl", price: "R9.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
+    { name: "Chicken Hummus Bowl", price: "R159", image: `${IMG}/plate-hummus-bowl.jpg` },
+    { name: "Beef Hummus Bowl", price: "R169", image: `${IMG}/plate-hummus-bowl.jpg` },
+    { name: "Vegan Hummus Bowl", price: "R95", tag: "Vegan & Gluten Free", image: `${IMG}/plate-hummus-bowl.jpg` },
+    { name: "Extra Pita", price: "R12", image: `${IMG}/deli-single-pita.jpg` },
+    { name: "Extra Laffa", price: "R19", image: `${IMG}/deli-laffa.jpg` },
   ],
-  "Sides": [
-    { name: "Crispy potato Bites", price: "R50.00", image: "https://images.unsplash.com/photo-1598679253440-2c5b0f52d201?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Side Chopped Salad", price: "R70.00", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Xtra Chicken Shawarma", price: "R69.00", image: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Xtra Beef Shawarma", price: "R79.00", image: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Cocktail Wings (8)", price: "R89.00", image: "https://images.unsplash.com/photo-1629385934493-2cb4343d22e0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Falafel Balls (6)", price: "R49.00", image: "https://images.unsplash.com/photo-1593992854933-4c07929a259c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" },
-    { name: "Falafel Ball", price: "R8.00", image: "https://thefalafelguy.co.za/wp-content/uploads/2022/10/the-falafel-guy-logo.png" },
+  "Coffee": [
+    { name: "Cappuccino", price: "R33 / R38", description: "Single / Double" },
+    { name: "Cafe Latte", price: "R40" },
+    { name: "Flat White", price: "R38" },
+    { name: "Americano (with milk)", price: "R31 / R33", description: "Single / Double" },
+    { name: "Americano", price: "R27 / R29", description: "Single / Double" },
+    { name: "Espresso", price: "R24 / R26", description: "Single / Double" },
+    { name: "Macchiato", price: "R29" },
+    { name: "Cortado", price: "R32" },
+    { name: "Turkish", price: "R35" },
+    { name: "Red Cappuccino", price: "R25 / R40", description: "Single / Double" },
+    { name: "Babychino", price: "R20" },
+  ],
+  "Frappes": [
+    { name: "Hazelnut", price: "R45", description: "Iced or steaming hot" },
+    { name: "Toffee Caramel", price: "R45", description: "Iced or steaming hot" },
+    { name: "Frappechino", price: "R40", description: "Iced or steaming hot" },
+    { name: "Chai Latte", price: "R40", description: "Iced or steaming hot" },
+    { name: "Hot Chocolate", price: "R49", description: "Iced or steaming hot" },
+  ],
+  "Tea": [
+    { name: "Earl Gray", price: "R40" },
+    { name: "Ceylon", price: "R35" },
+    { name: "Rooibos", price: "R35" },
+    { name: "Green Tea", price: "R42" },
+  ],
+  "Cold Drinks": [
+    { name: "Coca Cola", price: "R33", image: `${IMG}/drink-coca-cola.png` },
+    { name: "Coca Cola Zero", price: "R33", image: `${IMG}/drink-cola-zero.png` },
+    { name: "Appletizer", price: "R35", image: `${IMG}/drink-appletaizer.png` },
+    { name: "Ice Tea Peach", price: "R33", image: `${IMG}/drink-icetea-peach.png` },
+    { name: "Ice Tea Berry", price: "R33", image: `${IMG}/drink-icetea-peach.png` },
+    { name: "Pepsi", price: "R25", image: `${IMG}/drink-pepsi.jpg` },
+    { name: "Pepsi Max", price: "R25", image: `${IMG}/drink-pepsi-max.jpg` },
+    { name: "Mirinda", price: "R25", image: `${IMG}/drink-mirinda.jpg` },
+    { name: "7UP Zero Sugar", price: "R25", image: `${IMG}/drink-7upjpg.jpg` },
+    { name: "Mineral Water", price: "R25", image: `${IMG}/drink-still-water.png` },
+    { name: "Sparkling Water", price: "R25", image: `${IMG}/drink-sparkling-water.jpg` },
+  ],
+  "Dessert": [
+    { name: "Crumbs & Cream Ice Cream Sandwich", price: "R59", description: "Milli Vanili, Hazelnut Heaven, or Biscuit Beast", image: `${IMG}/dessert-milli-vanilli.jpg` },
+    { name: "Crumbs & Cream Mini (4 pack)", price: "R99", description: "Assorted mini ice cream sandwiches", image: `${IMG}/dessert-super-mini-4.jpg` },
+    { name: "Crumbs & Cream Mini (9 pack)", price: "R199", description: "Assorted mini ice cream sandwiches", image: `${IMG}/dessert-super-mini-9.jpg` },
+    { name: "Malabi", price: "R95", description: "Popular coconut based vegan Middle Eastern dessert, served with sweet rose water and pistachio" },
+    { name: "Plain Halva", price: "R130", description: "Take home" },
+    { name: "Almond / Hazelnut Halva", price: "R135", description: "Take home" },
+    { name: "Pistachio Halva", price: "R140", description: "Take home" },
+    { name: "Plain Halva Spread", price: "R135", description: "Take home" },
+  ],
+  "Take Homes": [
+    { name: "10x Pita Deal", price: "R99", image: `${IMG}/deli-10x-pita-deal.jpg` },
+    { name: "10x Mezze Pita", price: "R80", image: `${IMG}/mezze-falafel-pita.jpg` },
+    { name: "Hummus Tub", price: "R8 / R60 / R110", description: "35ml / 250ml / 500ml", image: `${IMG}/deli-hummus-250ml.jpg` },
+    { name: "Tahini Tub", price: "R9 / R70 / R130", description: "35ml / 250ml / 500ml" },
+    { name: "Raw Tahini", price: "R85 / R150", description: "250ml / 500ml" },
+    { name: "Amba Sauce", price: "R10 / R80 / R145", description: "35ml / 250ml / 500ml" },
+    { name: "Schug Sauce", price: "R12 / R135 / R260", description: "35ml / 250ml / 500ml" },
+    { name: "Red Hot Sauce", price: "R7 / R55", description: "35ml / 250ml" },
+    { name: "Pickled Cucumber", price: "R35 / R70", description: "250ml / 500ml" },
+    { name: "Pickled Cabbage", price: "R35 / R70", description: "250ml / 500ml" },
+    { name: "Pickled Chili", price: "R35 / R70", description: "250ml / 500ml" },
   ],
 };
 
@@ -100,9 +151,9 @@ export default function MenuSection() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <div className="w-16 h-1 bg-yellow-600 mx-auto mb-6" />
+          <div className="w-16 h-1 mx-auto mb-6" style={{ backgroundColor: '#F8D09F' }} />
           <h2 className="text-5xl md:text-6xl font-light text-white mb-4 tracking-wide">
-            OUR <span className="font-bold text-yellow-500">MENU</span>
+            OUR <span className="font-bold" style={{ color: '#F8D09F' }}>MENU</span>
           </h2>
           <p className="text-white/60 text-lg font-light max-w-2xl mx-auto">
             Every dish crafted with authentic recipes and the finest ingredients.
@@ -111,12 +162,16 @@ export default function MenuSection() {
 
         <div className="flex justify-center mb-12">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-            <TabsList className="bg-black border border-yellow-600/20 p-2 h-auto flex-wrap justify-center">
+            <TabsList className="bg-black p-2 h-auto flex-wrap justify-center" style={{ border: '1px solid #F8D09F30' }}>
               {categories.map((category) => (
-                <TabsTrigger 
-                  key={category} 
+                <TabsTrigger
+                  key={category}
                   value={category}
-                  className="data-[state=active]:bg-yellow-600 data-[state=active]:text-black text-white/70 hover:bg-yellow-600/10 rounded-sm"
+                  className="rounded-sm transition-colors"
+                  style={{
+                    backgroundColor: selectedCategory === category ? '#F8D09F' : 'transparent',
+                    color: selectedCategory === category ? 'black' : 'rgba(255,255,255,0.7)',
+                  }}
                 >
                   {category}
                 </TabsTrigger>

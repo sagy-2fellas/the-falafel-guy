@@ -6,9 +6,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
-// Mobile: pre-extracted JPG frames (40 frames, ~1.6MB total)
+// Mobile: pre-extracted JPG frames — img swap approach (GPU composited)
 const MOBILE_FRAME_PATH = '/ezgif-580dc0767016926f-jpg/ezgif-frame-';
-const MOBILE_FRAME_COUNT = 80;
+const MOBILE_FRAME_COUNT = 40; // use every 2nd frame — 40 is plenty for smooth scrolling
 
 const DESKTOP_CONFIG = {
   frames: 60,
@@ -29,7 +29,9 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   const introRef = useRef(null);
   const scrollIndicatorRef = useRef(null);
   const overlayRef = useRef(null);
-  const framesRef = useRef([]);
+  const framesRef = useRef([]);           // desktop: ImageBitmap array
+  const mobileFrameWrapRef = useRef(null); // mobile: container for stacked <img>s
+  const mobileImgsRef = useRef([]);        // mobile: array of <img> elements
   const [loadProgress, setLoadProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const isMobile = useIsMobile();
@@ -38,47 +40,55 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   const isMobileResolved = typeof isMobile === 'boolean';
   const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
 
-  // Load frames — mobile: pre-extracted JPGs, desktop: extract from video
+  // Load frames — mobile: pre-extracted JPGs into stacked <img>s, desktop: extract from video into canvas
   useEffect(() => {
     if (!isMobileResolved) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
     let cancelled = false;
 
     if (isMobile) {
-      // Mobile: load pre-extracted JPG frames
+      // Mobile: load pre-extracted JPG frames as <img> elements
       const totalFrames = MOBILE_FRAME_COUNT;
-      const loadedFrames = new Array(totalFrames);
+      const wrap = mobileFrameWrapRef.current;
+      if (!wrap) return;
+
+      const imgs = [];
       let loaded = 0;
 
-      const onAllLoaded = () => {
-        if (cancelled) return;
-        framesRef.current = loadedFrames;
-        canvas.width = loadedFrames[0].naturalWidth;
-        canvas.height = loadedFrames[0].naturalHeight;
-        ctx.drawImage(loadedFrames[0], 0, 0);
-        setIsReady(true);
-      };
-
       for (let i = 0; i < totalFrames; i++) {
-        const img = new Image();
-        const num = String(i + 1).padStart(3, '0');
+        const img = document.createElement('img');
+        // Use every 2nd source frame (001, 003, 005...) for 40 frames from 80 source files
+        const srcIndex = i * 2 + 1;
+        const num = String(srcIndex).padStart(3, '0');
         img.src = `${MOBILE_FRAME_PATH}${num}.jpg`;
+        img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;visibility:hidden;';
+        img.draggable = false;
+        wrap.appendChild(img);
+        imgs.push(img);
+
         img.onload = () => {
           if (cancelled) return;
-          loadedFrames[i] = img;
           loaded++;
           setLoadProgress(Math.round((loaded / totalFrames) * 100));
-          if (loaded === totalFrames) onAllLoaded();
+          if (loaded === totalFrames) {
+            mobileImgsRef.current = imgs;
+            // Show first frame
+            imgs[0].style.visibility = 'visible';
+            setIsReady(true);
+          }
         };
       }
 
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+        imgs.forEach(img => img.remove());
+      };
     }
 
-    // Desktop: extract frames from video
+    // Desktop: extract frames from video into canvas
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
@@ -164,12 +174,16 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   useEffect(() => {
     if (!isReady) return;
 
-    const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container) return;
-    const ctx = canvas.getContext('2d');
-    const frames = framesRef.current;
-    const totalFrames = frames.length;
+    if (!container) return;
+
+    // Desktop uses canvas, mobile uses img swap
+    const isDesktop = !isMobile;
+    const canvas = canvasRef.current;
+    const ctx = isDesktop && canvas ? canvas.getContext('2d') : null;
+    const desktopFrames = isDesktop ? framesRef.current : null;
+    const mobileImgs = !isDesktop ? mobileImgsRef.current : null;
+    const totalFrames = isDesktop ? (desktopFrames?.length || 0) : (mobileImgs?.length || 0);
 
     const TEXT_BLOCKS = [
       { start: 0.02, end: 0.30 },
@@ -194,13 +208,23 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         // Paint frame
         const frameIndex = Math.min(totalFrames - 1, Math.max(0, Math.round(fraction * (totalFrames - 1))));
         if (frameIndex !== lastFrameIndex) {
-          ctx.drawImage(frames[frameIndex], 0, 0, canvas.width, canvas.height);
+          if (isDesktop && ctx) {
+            ctx.drawImage(desktopFrames[frameIndex], 0, 0, canvas.width, canvas.height);
+          } else if (mobileImgs) {
+            // GPU-composited: just toggle visibility
+            if (lastFrameIndex >= 0) mobileImgs[lastFrameIndex].style.visibility = 'hidden';
+            mobileImgs[frameIndex].style.visibility = 'visible';
+          }
           lastFrameIndex = frameIndex;
         }
 
-        // Hide video background once the logo/banner is fully visible
-        const bannerVisible = fraction >= 0.73; // logo fade-in completes around here
-        canvas.style.opacity = bannerVisible ? '0' : '1';
+        // Hide video/frames once the logo/banner is fully visible
+        const bannerVisible = fraction >= 0.73;
+        if (isDesktop && canvas) {
+          canvas.style.opacity = bannerVisible ? '0' : '1';
+        } else if (mobileFrameWrapRef.current) {
+          mobileFrameWrapRef.current.style.opacity = bannerVisible ? '0' : '1';
+        }
         if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
 
         // Intro tagline — visible on load, fades out as scroll begins
@@ -221,7 +245,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
           if (fraction >= start && fraction <= end) {
             const p = (fraction - start) / (end - start);
 
-            // Opacity: quick fade in at start, slow fade out at end
             let opacity;
             if (p < 0.1) {
               opacity = p / 0.1;
@@ -231,8 +254,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
               opacity = 1;
             }
 
-            // Position: slides from top of screen to bottom, driven by scroll
-            // At p=0 starts at -80px (above), at p=1 ends at +120px (below)
             const ty = -80 + (p * 200);
 
             el.style.opacity = Math.max(0, Math.min(1, opacity));
@@ -270,7 +291,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
-  }, [isReady]);
+  }, [isReady, isMobile]);
 
   return (
     <>
@@ -291,19 +312,34 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         </div>
       )}
 
-      {/* Fixed fullscreen canvas */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          objectFit: 'cover',
-          zIndex: 0,
-        }}
-      />
+      {/* Fixed fullscreen frame display */}
+      {isMobile ? (
+        <div
+          ref={mobileFrameWrapRef}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 0,
+            overflow: 'hidden',
+          }}
+        />
+      ) : (
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            objectFit: 'cover',
+            zIndex: 0,
+          }}
+        />
+      )}
 
       {/* Dark overlay */}
       <div

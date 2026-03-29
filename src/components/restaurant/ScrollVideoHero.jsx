@@ -181,8 +181,10 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     let currentFraction = 0;
     let lastFrameIndex = -1;
     let animId = 0;
-    // Smoothing factor: lower = smoother but more lag
-    const LERP_SPEED = isMobile ? 0.08 : 0.2;
+    let lastTime = 0;
+    // Time-based smoothing — consistent across different frame rates
+    // Lower = silkier glide. 6 on mobile gives a butter-smooth feel.
+    const SMOOTH_SPEED = isMobile ? 6 : 10;
 
     // For retina-scaled canvas, draw at logical (pre-scale) dimensions
     const drawW = isMobile && frames[0]?.naturalWidth ? frames[0].naturalWidth : canvas.width;
@@ -261,11 +263,14 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     };
 
     // Continuous rAF loop — smoothly interpolates toward the target scroll position
-    const tick = () => {
-      // Lerp toward target
+    const tick = (time) => {
+      const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0.016; // cap at 50ms
+      lastTime = time;
+
+      // Time-based lerp — consistent smoothing regardless of device frame rate
       const diff = targetFraction - currentFraction;
-      if (Math.abs(diff) > 0.0005) {
-        currentFraction += diff * LERP_SPEED;
+      if (Math.abs(diff) > 0.0001) {
+        currentFraction += diff * (1 - Math.exp(-SMOOTH_SPEED * dt));
         updateVisuals(currentFraction);
       }
       animId = requestAnimationFrame(tick);

@@ -177,20 +177,26 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         lastFrameIndex = frameIndex;
       }
 
-      // Hide all fixed hero elements once user scrolls past the hero container
+      // Once the hero container is fully off-screen, hide fixed elements
+      // so they don't bleed through transparent areas (e.g. footer).
+      // Use visibility instead of opacity to avoid a black flash —
+      // the z-10 content naturally covers them as the user scrolls.
       const containerBottom = container.getBoundingClientRect().bottom;
-      const pastHero = containerBottom <= window.innerHeight;
+      const heroOffScreen = containerBottom <= 0;
+      const hiddenStyle = heroOffScreen ? 'hidden' : 'visible';
+
+      canvas.style.visibility = hiddenStyle;
+      if (overlayRef.current) overlayRef.current.style.visibility = hiddenStyle;
 
       // Hide canvas once the logo/banner is fully visible
       const bannerVisible = fraction >= 0.73;
-      canvas.style.opacity = (bannerVisible || pastHero) ? '0' : '1';
-      if (overlayRef.current) overlayRef.current.style.opacity = (bannerVisible || pastHero) ? '0' : '1';
+      canvas.style.opacity = bannerVisible ? '0' : '1';
+      if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
 
       // Intro tagline — visible longer so users can read it
       if (introRef.current) {
-        if (pastHero) {
-          introRef.current.style.opacity = '0';
-        } else if (fraction <= 0.04) {
+        introRef.current.style.visibility = hiddenStyle;
+        if (fraction <= 0.04) {
           introRef.current.style.opacity = '1';
         } else if (fraction <= 0.12) {
           introRef.current.style.opacity = String(1 - (fraction - 0.04) / 0.08);
@@ -202,10 +208,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       // Text blocks
       textBlocksRef.current.forEach((el, i) => {
         if (!el) return;
-        if (pastHero) {
-          el.style.opacity = '0';
-          return;
-        }
+        el.style.visibility = hiddenStyle;
         const { start, end } = TEXT_BLOCKS[i];
         if (fraction >= start && fraction <= end) {
           const p = (fraction - start) / (end - start);
@@ -230,11 +233,9 @@ export default function ScrollVideoHero({ onScrollToContact }) {
 
       // Logo + CTA
       if (logoCtaRef.current) {
+        logoCtaRef.current.style.visibility = hiddenStyle;
         const start = LOGO_CTA.start;
-        if (pastHero) {
-          logoCtaRef.current.style.opacity = '0';
-          logoCtaRef.current.style.pointerEvents = 'none';
-        } else if (fraction >= start) {
+        if (fraction >= start) {
           const fadeRange = 0.08;
           const p = Math.min(1, (fraction - start) / fadeRange);
           const ty = (1 - p) * 40;

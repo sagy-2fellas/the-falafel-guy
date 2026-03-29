@@ -51,6 +51,44 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     const totalFrames = config.frames;
     const loadedFrames = new Array(totalFrames);
     let loaded = 0;
+    let firstFrameShown = false;
+
+    // Set up canvas size to match viewport at retina resolution
+    const setupCanvas = (imgW, imgH) => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      canvas.width = vw * dpr;
+      canvas.height = vh * dpr;
+      ctx.scale(dpr, dpr);
+    };
+
+    // Draw image with "cover" behavior — crop to fill, no stretching
+    const drawCover = (img) => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const imgW = img.naturalWidth;
+      const imgH = img.naturalHeight;
+      const imgRatio = imgW / imgH;
+      const vpRatio = vw / vh;
+
+      let sx, sy, sw, sh;
+      if (imgRatio > vpRatio) {
+        // Image is wider — crop sides
+        sh = imgH;
+        sw = imgH * vpRatio;
+        sx = (imgW - sw) / 2;
+        sy = 0;
+      } else {
+        // Image is taller — crop top/bottom
+        sw = imgW;
+        sh = imgW / vpRatio;
+        sx = 0;
+        sy = (imgH - sh) / 2;
+      }
+
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, vw, vh);
+    };
 
     for (let i = 0; i < totalFrames; i++) {
       const img = new Image();
@@ -61,16 +99,16 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         loadedFrames[i] = img;
         loaded++;
         setLoadProgress(Math.round((loaded / totalFrames) * 100));
+
+        // Show first frame immediately — don't wait for all to load
+        if (i === 0 && !firstFrameShown) {
+          firstFrameShown = true;
+          setupCanvas(img.naturalWidth, img.naturalHeight);
+          drawCover(img);
+        }
+
         if (loaded === totalFrames) {
           framesRef.current = loadedFrames;
-          // Scale canvas for retina — crisp rendering on high-DPI screens
-          const dpr = Math.min(window.devicePixelRatio || 1, 2);
-          const w = loadedFrames[0].naturalWidth;
-          const h = loadedFrames[0].naturalHeight;
-          canvas.width = w * dpr;
-          canvas.height = h * dpr;
-          ctx.scale(dpr, dpr);
-          ctx.drawImage(loadedFrames[0], 0, 0, w, h);
           setIsReady(true);
         }
       };
@@ -90,12 +128,13 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     const frames = framesRef.current;
     const totalFrames = frames.length;
 
+    // Text blocks — no overlap: each fully exits before the next enters
     const TEXT_BLOCKS = [
-      { start: 0.02, end: 0.30 },
-      { start: 0.25, end: 0.50 },
-      { start: 0.45, end: 0.68 },
+      { start: 0.05, end: 0.25 },
+      { start: 0.28, end: 0.48 },
+      { start: 0.51, end: 0.68 },
     ];
-    const LOGO_CTA = { start: 0.65, end: 0.95 };
+    const LOGO_CTA = { start: 0.68, end: 0.95 };
 
     // Smoothing: track target vs current fraction
     let targetFraction = 0;
@@ -103,19 +142,38 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     let lastFrameIndex = -1;
     let animId = 0;
     let lastTime = 0;
-    // Time-based smoothing — consistent across different frame rates
-    // Lower = silkier glide. 6 on mobile gives a butter-smooth feel.
     const SMOOTH_SPEED = isMobile ? 6 : 10;
 
-    // Draw at logical (pre-dpr-scale) dimensions — dpr scaling is handled by ctx.scale
-    const drawW = frames[0]?.naturalWidth || canvas.width;
-    const drawH = frames[0]?.naturalHeight || canvas.height;
+    // Draw image with "cover" behavior — crop to fill viewport, no stretching
+    const drawCover = (img) => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const imgW = img.naturalWidth;
+      const imgH = img.naturalHeight;
+      const imgRatio = imgW / imgH;
+      const vpRatio = vw / vh;
+
+      let sx, sy, sw, sh;
+      if (imgRatio > vpRatio) {
+        sh = imgH;
+        sw = imgH * vpRatio;
+        sx = (imgW - sw) / 2;
+        sy = 0;
+      } else {
+        sw = imgW;
+        sh = imgW / vpRatio;
+        sx = 0;
+        sy = (imgH - sh) / 2;
+      }
+
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, vw, vh);
+    };
 
     const updateVisuals = (fraction) => {
-      // Paint frame
+      // Paint frame with cover crop
       const frameIndex = Math.min(totalFrames - 1, Math.max(0, Math.round(fraction * (totalFrames - 1))));
       if (frameIndex !== lastFrameIndex) {
-        ctx.drawImage(frames[frameIndex], 0, 0, drawW, drawH);
+        drawCover(frames[frameIndex]);
         lastFrameIndex = frameIndex;
       }
 
@@ -124,12 +182,12 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       canvas.style.opacity = bannerVisible ? '0' : '1';
       if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
 
-      // Intro tagline
+      // Intro tagline — visible longer so users can read it
       if (introRef.current) {
-        if (fraction <= 0.02) {
+        if (fraction <= 0.04) {
           introRef.current.style.opacity = '1';
-        } else if (fraction <= 0.08) {
-          introRef.current.style.opacity = String(1 - (fraction - 0.02) / 0.06);
+        } else if (fraction <= 0.12) {
+          introRef.current.style.opacity = String(1 - (fraction - 0.04) / 0.08);
         } else {
           introRef.current.style.opacity = '0';
         }
@@ -217,19 +275,22 @@ export default function ScrollVideoHero({ onScrollToContact }) {
 
   return (
     <>
-      {/* Loading screen */}
+      {/* Loading screen with logo */}
       {!isReady && (
         <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
           <div className="text-center">
-            <div className="w-10 h-10 border-4 border-[#F8D09F]/30 border-t-[#F8D09F] rounded-full animate-spin mb-4 mx-auto" />
-            <p className="text-white/60 text-sm mb-2">Loading experience...</p>
+            <img
+              src={LOGO_SRC}
+              alt="The Falafel Guy"
+              style={{ maxWidth: '280px', width: '60%', marginBottom: '2rem', opacity: 0.9 }}
+              draggable={false}
+            />
             <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mx-auto">
               <div
                 className="h-full bg-[#F8D09F] rounded-full"
                 style={{ width: `${loadProgress}%`, transition: 'width 0.1s linear' }}
               />
             </div>
-            <p className="text-white/40 text-xs mt-2">{loadProgress}%</p>
           </div>
         </div>
       )}
@@ -243,7 +304,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
           left: 0,
           width: '100vw',
           height: '100vh',
-          objectFit: 'cover',
           zIndex: 0,
         }}
       />

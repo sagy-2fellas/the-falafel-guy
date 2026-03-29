@@ -29,9 +29,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   const introRef = useRef(null);
   const scrollIndicatorRef = useRef(null);
   const overlayRef = useRef(null);
-  const framesRef = useRef([]);           // desktop: ImageBitmap array
-  const mobileFrameWrapRef = useRef(null); // mobile: container for stacked <img>s
-  const mobileImgsRef = useRef([]);        // mobile: array of <img> elements
+  const framesRef = useRef([]);
   const [loadProgress, setLoadProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const isMobile = useIsMobile();
@@ -40,55 +38,47 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   const isMobileResolved = typeof isMobile === 'boolean';
   const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
 
-  // Load frames — mobile: pre-extracted JPGs into stacked <img>s, desktop: extract from video into canvas
+  // Load frames — mobile: pre-extracted JPGs, desktop: extract from video
   useEffect(() => {
     if (!isMobileResolved) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     let cancelled = false;
 
     if (isMobile) {
-      // Mobile: load pre-extracted JPG frames as <img> elements
+      // Mobile: load pre-extracted JPG frames as Image objects
       const totalFrames = MOBILE_FRAME_COUNT;
-      const wrap = mobileFrameWrapRef.current;
-      if (!wrap) return;
-
-      const imgs = [];
+      const loadedFrames = new Array(totalFrames);
       let loaded = 0;
 
       for (let i = 0; i < totalFrames; i++) {
-        const img = document.createElement('img');
+        const img = new Image();
         // Use every 2nd source frame (001, 003, 005...) for 40 frames from 80 source files
         const srcIndex = i * 2 + 1;
         const num = String(srcIndex).padStart(3, '0');
         img.src = `${MOBILE_FRAME_PATH}${num}.jpg`;
-        img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;visibility:hidden;';
-        img.draggable = false;
-        wrap.appendChild(img);
-        imgs.push(img);
-
         img.onload = () => {
           if (cancelled) return;
+          loadedFrames[i] = img;
           loaded++;
           setLoadProgress(Math.round((loaded / totalFrames) * 100));
           if (loaded === totalFrames) {
-            mobileImgsRef.current = imgs;
-            // Show first frame
-            imgs[0].style.visibility = 'visible';
+            framesRef.current = loadedFrames;
+            // Set canvas to match image dimensions
+            canvas.width = loadedFrames[0].naturalWidth;
+            canvas.height = loadedFrames[0].naturalHeight;
+            ctx.drawImage(loadedFrames[0], 0, 0);
             setIsReady(true);
           }
         };
       }
 
-      return () => {
-        cancelled = true;
-        imgs.forEach(img => img.remove());
-      };
+      return () => { cancelled = true; };
     }
 
-    // Desktop: extract frames from video into canvas
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
+    // Desktop: extract frames from video
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
@@ -129,7 +119,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       const duration = video.duration;
       const totalFrames = config.frames;
 
-      // Phase 1: Extract every 4th frame for quick interactivity
       const sparseFrames = new Array(totalFrames);
       const step = 4;
       let extracted = 0;
@@ -154,7 +143,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       ctx.drawImage(sparseFrames[0], 0, 0, w, h);
       setIsReady(true);
 
-      // Phase 2: Fill remaining frames in background
       for (let i = 0; i < totalFrames; i++) {
         if (cancelled) return;
         if (i % step === 0) continue;
@@ -170,20 +158,16 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     };
   }, [isMobileResolved, isMobile]);
 
-  // Scroll handler — direct DOM, no React state
+  // Scroll handler with smooth interpolation
   useEffect(() => {
     if (!isReady) return;
 
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Desktop uses canvas, mobile uses img swap
-    const isDesktop = !isMobile;
     const canvas = canvasRef.current;
-    const ctx = isDesktop && canvas ? canvas.getContext('2d') : null;
-    const desktopFrames = isDesktop ? framesRef.current : null;
-    const mobileImgs = !isDesktop ? mobileImgsRef.current : null;
-    const totalFrames = isDesktop ? (desktopFrames?.length || 0) : (mobileImgs?.length || 0);
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const ctx = canvas.getContext('2d');
+    const frames = framesRef.current;
+    const totalFrames = frames.length;
 
     const TEXT_BLOCKS = [
       { start: 0.02, end: 0.30 },
@@ -192,105 +176,113 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     ];
     const LOGO_CTA = { start: 0.65, end: 0.95 };
 
-    let ticking = false;
+    // Smoothing: track target vs current fraction
+    let targetFraction = 0;
+    let currentFraction = 0;
     let lastFrameIndex = -1;
+    let animId = 0;
+    // Smoothing factor: lower = smoother but more lag. 0.12 feels natural on mobile.
+    const LERP_SPEED = isMobile ? 0.12 : 0.2;
 
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
+    const updateVisuals = (fraction) => {
+      // Paint frame
+      const frameIndex = Math.min(totalFrames - 1, Math.max(0, Math.round(fraction * (totalFrames - 1))));
+      if (frameIndex !== lastFrameIndex) {
+        ctx.drawImage(frames[frameIndex], 0, 0, canvas.width, canvas.height);
+        lastFrameIndex = frameIndex;
+      }
 
-        const rect = container.getBoundingClientRect();
-        const scrollable = container.offsetHeight - window.innerHeight;
-        const fraction = scrollable > 0 ? Math.max(0, Math.min(1, -rect.top / scrollable)) : 0;
+      // Hide canvas once the logo/banner is fully visible
+      const bannerVisible = fraction >= 0.73;
+      canvas.style.opacity = bannerVisible ? '0' : '1';
+      if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
 
-        // Paint frame
-        const frameIndex = Math.min(totalFrames - 1, Math.max(0, Math.round(fraction * (totalFrames - 1))));
-        if (frameIndex !== lastFrameIndex) {
-          if (isDesktop && ctx) {
-            ctx.drawImage(desktopFrames[frameIndex], 0, 0, canvas.width, canvas.height);
-          } else if (mobileImgs) {
-            // GPU-composited: just toggle visibility
-            if (lastFrameIndex >= 0) mobileImgs[lastFrameIndex].style.visibility = 'hidden';
-            mobileImgs[frameIndex].style.visibility = 'visible';
-          }
-          lastFrameIndex = frameIndex;
+      // Intro tagline
+      if (introRef.current) {
+        if (fraction <= 0.02) {
+          introRef.current.style.opacity = '1';
+        } else if (fraction <= 0.08) {
+          introRef.current.style.opacity = String(1 - (fraction - 0.02) / 0.06);
+        } else {
+          introRef.current.style.opacity = '0';
         }
+      }
 
-        // Hide video/frames once the logo/banner is fully visible
-        const bannerVisible = fraction >= 0.73;
-        if (isDesktop && canvas) {
-          canvas.style.opacity = bannerVisible ? '0' : '1';
-        } else if (mobileFrameWrapRef.current) {
-          mobileFrameWrapRef.current.style.opacity = bannerVisible ? '0' : '1';
-        }
-        if (overlayRef.current) overlayRef.current.style.opacity = bannerVisible ? '0' : '1';
+      // Text blocks
+      textBlocksRef.current.forEach((el, i) => {
+        if (!el) return;
+        const { start, end } = TEXT_BLOCKS[i];
+        if (fraction >= start && fraction <= end) {
+          const p = (fraction - start) / (end - start);
 
-        // Intro tagline — visible on load, fades out as scroll begins
-        if (introRef.current) {
-          if (fraction <= 0.02) {
-            introRef.current.style.opacity = '1';
-          } else if (fraction <= 0.08) {
-            introRef.current.style.opacity = String(1 - (fraction - 0.02) / 0.06);
+          let opacity;
+          if (p < 0.1) {
+            opacity = p / 0.1;
+          } else if (p > 0.92) {
+            opacity = (1 - p) / 0.08;
           } else {
-            introRef.current.style.opacity = '0';
+            opacity = 1;
           }
-        }
 
-        // Text blocks — continuously slide from top to bottom, scroll-driven position
-        textBlocksRef.current.forEach((el, i) => {
-          if (!el) return;
-          const { start, end } = TEXT_BLOCKS[i];
-          if (fraction >= start && fraction <= end) {
-            const p = (fraction - start) / (end - start);
-
-            let opacity;
-            if (p < 0.1) {
-              opacity = p / 0.1;
-            } else if (p > 0.92) {
-              opacity = (1 - p) / 0.08;
-            } else {
-              opacity = 1;
-            }
-
-            const ty = -80 + (p * 200);
-
-            el.style.opacity = Math.max(0, Math.min(1, opacity));
-            el.style.transform = `translateY(${ty}px)`;
-          } else {
-            el.style.opacity = '0';
-            el.style.transform = fraction < start ? 'translateY(-80px)' : 'translateY(120px)';
-          }
-        });
-
-        // Logo + CTA (fade in, stay visible until next section covers)
-        if (logoCtaRef.current) {
-          const start = LOGO_CTA.start;
-          if (fraction >= start) {
-            const fadeRange = 0.08;
-            const p = Math.min(1, (fraction - start) / fadeRange);
-            const ty = (1 - p) * 40;
-            logoCtaRef.current.style.opacity = p;
-            logoCtaRef.current.style.transform = `translateY(${ty}px)`;
-            logoCtaRef.current.style.pointerEvents = p > 0.3 ? 'auto' : 'none';
-          } else {
-            logoCtaRef.current.style.opacity = '0';
-            logoCtaRef.current.style.transform = 'translateY(40px)';
-            logoCtaRef.current.style.pointerEvents = 'none';
-          }
-        }
-
-        // Scroll indicator
-        if (scrollIndicatorRef.current) {
-          scrollIndicatorRef.current.style.opacity = fraction < 0.05 ? '1' : String(Math.max(0, 1 - fraction * 10));
+          const ty = -80 + (p * 200);
+          el.style.opacity = Math.max(0, Math.min(1, opacity));
+          el.style.transform = `translateY(${ty}px)`;
+        } else {
+          el.style.opacity = '0';
+          el.style.transform = fraction < start ? 'translateY(-80px)' : 'translateY(120px)';
         }
       });
+
+      // Logo + CTA
+      if (logoCtaRef.current) {
+        const start = LOGO_CTA.start;
+        if (fraction >= start) {
+          const fadeRange = 0.08;
+          const p = Math.min(1, (fraction - start) / fadeRange);
+          const ty = (1 - p) * 40;
+          logoCtaRef.current.style.opacity = p;
+          logoCtaRef.current.style.transform = `translateY(${ty}px)`;
+          logoCtaRef.current.style.pointerEvents = p > 0.3 ? 'auto' : 'none';
+        } else {
+          logoCtaRef.current.style.opacity = '0';
+          logoCtaRef.current.style.transform = 'translateY(40px)';
+          logoCtaRef.current.style.pointerEvents = 'none';
+        }
+      }
+
+      // Scroll indicator
+      if (scrollIndicatorRef.current) {
+        scrollIndicatorRef.current.style.opacity = fraction < 0.05 ? '1' : String(Math.max(0, 1 - fraction * 10));
+      }
+    };
+
+    // Continuous rAF loop — smoothly interpolates toward the target scroll position
+    const tick = () => {
+      // Lerp toward target
+      const diff = targetFraction - currentFraction;
+      if (Math.abs(diff) > 0.0005) {
+        currentFraction += diff * LERP_SPEED;
+        updateVisuals(currentFraction);
+      }
+      animId = requestAnimationFrame(tick);
+    };
+
+    // Scroll listener just updates the target — no heavy work
+    const onScroll = () => {
+      const rect = container.getBoundingClientRect();
+      const scrollable = container.offsetHeight - window.innerHeight;
+      targetFraction = scrollable > 0 ? Math.max(0, Math.min(1, -rect.top / scrollable)) : 0;
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
+    updateVisuals(0);
+    animId = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(animId);
+    };
   }, [isReady, isMobile]);
 
   return (
@@ -312,34 +304,19 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         </div>
       )}
 
-      {/* Fixed fullscreen frame display */}
-      {isMobile ? (
-        <div
-          ref={mobileFrameWrapRef}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 0,
-            overflow: 'hidden',
-          }}
-        />
-      ) : (
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            objectFit: 'cover',
-            zIndex: 0,
-          }}
-        />
-      )}
+      {/* Fixed fullscreen canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          objectFit: 'cover',
+          zIndex: 0,
+        }}
+      />
 
       {/* Dark overlay */}
       <div

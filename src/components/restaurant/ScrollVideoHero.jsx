@@ -3,15 +3,16 @@ import { ShoppingBag, Phone, Bike } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
-// Mobile: pre-extracted JPG frames
+// Pre-extracted JPG frames for both platforms
+const DESKTOP_FRAME_PATH = '/desktop-hero-frames/ezgif-frame-';
+const DESKTOP_FRAME_COUNT = 80;
 const MOBILE_FRAME_PATH = '/ezgif-580dc0767016926f-jpg/ezgif-frame-';
-const MOBILE_FRAME_COUNT = 80; // all frames for smoothest animation
+const MOBILE_FRAME_COUNT = 80;
 
 const DESKTOP_CONFIG = {
-  frames: 60,
+  frames: DESKTOP_FRAME_COUNT,
   scrollHeight: 350, // vh
 };
 
@@ -37,7 +38,7 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   const isMobileResolved = typeof isMobile === 'boolean';
   const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
 
-  // Load frames — mobile: pre-extracted JPGs, desktop: extract from video
+  // Load pre-extracted JPG frames (same approach for both mobile and desktop)
   useEffect(() => {
     if (!isMobileResolved) return;
 
@@ -46,115 +47,36 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     const ctx = canvas.getContext('2d');
     let cancelled = false;
 
-    if (isMobile) {
-      // Mobile: load pre-extracted JPG frames as Image objects
-      const totalFrames = MOBILE_FRAME_COUNT;
-      const loadedFrames = new Array(totalFrames);
-      let loaded = 0;
+    const framePath = isMobile ? MOBILE_FRAME_PATH : DESKTOP_FRAME_PATH;
+    const totalFrames = config.frames;
+    const loadedFrames = new Array(totalFrames);
+    let loaded = 0;
 
-      for (let i = 0; i < totalFrames; i++) {
-        const img = new Image();
-        const num = String(i + 1).padStart(3, '0');
-        img.src = `${MOBILE_FRAME_PATH}${num}.jpg`;
-        img.onload = () => {
-          if (cancelled) return;
-          loadedFrames[i] = img;
-          loaded++;
-          setLoadProgress(Math.round((loaded / totalFrames) * 100));
-          if (loaded === totalFrames) {
-            framesRef.current = loadedFrames;
-            // Scale canvas for retina — crisp rendering on high-DPI screens
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = loadedFrames[0].naturalWidth * dpr;
-            canvas.height = loadedFrames[0].naturalHeight * dpr;
-            ctx.scale(dpr, dpr);
-            ctx.drawImage(loadedFrames[0], 0, 0, loadedFrames[0].naturalWidth, loadedFrames[0].naturalHeight);
-            setIsReady(true);
-          }
-        };
-      }
-
-      return () => { cancelled = true; };
+    for (let i = 0; i < totalFrames; i++) {
+      const img = new Image();
+      const num = String(i + 1).padStart(3, '0');
+      img.src = `${framePath}${num}.jpg`;
+      img.onload = () => {
+        if (cancelled) return;
+        loadedFrames[i] = img;
+        loaded++;
+        setLoadProgress(Math.round((loaded / totalFrames) * 100));
+        if (loaded === totalFrames) {
+          framesRef.current = loadedFrames;
+          // Scale canvas for retina — crisp rendering on high-DPI screens
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const w = loadedFrames[0].naturalWidth;
+          const h = loadedFrames[0].naturalHeight;
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+          ctx.scale(dpr, dpr);
+          ctx.drawImage(loadedFrames[0], 0, 0, w, h);
+          setIsReady(true);
+        }
+      };
     }
 
-    // Desktop: extract frames from video
-    const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.crossOrigin = 'anonymous';
-    video.src = VIDEO_DESKTOP;
-
-    const seekToTime = (time) =>
-      new Promise((resolve) => {
-        const onSeeked = () => {
-          video.removeEventListener('seeked', onSeeked);
-          resolve();
-        };
-        video.addEventListener('seeked', onSeeked);
-        video.currentTime = time;
-      });
-
-    video.addEventListener('loadedmetadata', async () => {
-      if (cancelled) return;
-
-      const w = video.videoWidth;
-      const h = video.videoHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-      // Canvas at full video res scaled for retina
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
-
-      // Offscreen extracts at native video resolution
-      const offscreen = document.createElement('canvas');
-      offscreen.width = w;
-      offscreen.height = h;
-      const offCtx = offscreen.getContext('2d');
-
-      const duration = video.duration;
-      const totalFrames = config.frames;
-
-      const sparseFrames = new Array(totalFrames);
-      const step = 4;
-      let extracted = 0;
-
-      for (let i = 0; i < totalFrames; i += step) {
-        if (cancelled) return;
-        await seekToTime((i / (totalFrames - 1)) * duration);
-        offCtx.drawImage(video, 0, 0, w, h);
-        sparseFrames[i] = await createImageBitmap(offscreen);
-        extracted++;
-        setLoadProgress(Math.round((extracted / totalFrames) * 100));
-      }
-
-      for (let i = 0; i < totalFrames; i++) {
-        if (!sparseFrames[i]) {
-          const prev = i - (i % step);
-          sparseFrames[i] = sparseFrames[prev];
-        }
-      }
-
-      framesRef.current = sparseFrames;
-      framesRef.drawW = w;
-      framesRef.drawH = h;
-      ctx.drawImage(sparseFrames[0], 0, 0, w, h);
-      setIsReady(true);
-
-      for (let i = 0; i < totalFrames; i++) {
-        if (cancelled) return;
-        if (i % step === 0) continue;
-        await seekToTime((i / (totalFrames - 1)) * duration);
-        offCtx.drawImage(video, 0, 0, w, h);
-        framesRef.current[i] = await createImageBitmap(offscreen);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      video.src = '';
-    };
+    return () => { cancelled = true; };
   }, [isMobileResolved, isMobile]);
 
   // Scroll handler with smooth interpolation
@@ -186,8 +108,8 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     const SMOOTH_SPEED = isMobile ? 6 : 10;
 
     // Draw at logical (pre-dpr-scale) dimensions — dpr scaling is handled by ctx.scale
-    const drawW = isMobile ? (frames[0]?.naturalWidth || canvas.width) : (framesRef.drawW || canvas.width);
-    const drawH = isMobile ? (frames[0]?.naturalHeight || canvas.height) : (framesRef.drawH || canvas.height);
+    const drawW = frames[0]?.naturalWidth || canvas.width;
+    const drawH = frames[0]?.naturalHeight || canvas.height;
 
     const updateVisuals = (fraction) => {
       // Paint frame

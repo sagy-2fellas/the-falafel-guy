@@ -7,8 +7,8 @@ const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
 
 // Mobile: pre-extracted JPG frames (40 frames, ~1.6MB total)
-const MOBILE_FRAME_PATH = '/mobile-hero-frames/ezgif-frame-';
-const MOBILE_FRAME_COUNT = 40;
+const MOBILE_FRAME_PATH = '/ezgif-580dc0767016926f-jpg/ezgif-frame-';
+const MOBILE_FRAME_COUNT = 80;
 
 const DESKTOP_CONFIG = {
   frames: 60,

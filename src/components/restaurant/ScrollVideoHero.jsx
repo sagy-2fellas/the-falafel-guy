@@ -13,7 +13,6 @@ const MOBILE_FRAME_COUNT = 80; // all frames for smoothest animation
 const DESKTOP_CONFIG = {
   frames: 60,
   scrollHeight: 350, // vh
-  maxCanvasWidth: 1280, // scale down from 1920 — faster extraction, no visible difference
 };
 
 const MOBILE_CONFIG = {
@@ -99,18 +98,16 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     video.addEventListener('loadedmetadata', async () => {
       if (cancelled) return;
 
-      let w = video.videoWidth;
-      let h = video.videoHeight;
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      if (config.maxCanvasWidth && w > config.maxCanvasWidth) {
-        const scale = config.maxCanvasWidth / w;
-        w = Math.round(w * scale);
-        h = Math.round(h * scale);
-      }
+      // Canvas at full video res scaled for retina
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
 
-      canvas.width = w;
-      canvas.height = h;
-
+      // Offscreen extracts at native video resolution
       const offscreen = document.createElement('canvas');
       offscreen.width = w;
       offscreen.height = h;
@@ -140,6 +137,8 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       }
 
       framesRef.current = sparseFrames;
+      framesRef.drawW = w;
+      framesRef.drawH = h;
       ctx.drawImage(sparseFrames[0], 0, 0, w, h);
       setIsReady(true);
 
@@ -186,9 +185,9 @@ export default function ScrollVideoHero({ onScrollToContact }) {
     // Lower = silkier glide. 6 on mobile gives a butter-smooth feel.
     const SMOOTH_SPEED = isMobile ? 6 : 10;
 
-    // For retina-scaled canvas, draw at logical (pre-scale) dimensions
-    const drawW = isMobile && frames[0]?.naturalWidth ? frames[0].naturalWidth : canvas.width;
-    const drawH = isMobile && frames[0]?.naturalHeight ? frames[0].naturalHeight : canvas.height;
+    // Draw at logical (pre-dpr-scale) dimensions — dpr scaling is handled by ctx.scale
+    const drawW = isMobile ? (frames[0]?.naturalWidth || canvas.width) : (framesRef.drawW || canvas.width);
+    const drawH = isMobile ? (frames[0]?.naturalHeight || canvas.height) : (framesRef.drawH || canvas.height);
 
     const updateVisuals = (fraction) => {
       // Paint frame

@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const VIDEO_DESKTOP = '/a0f3f75442f2b796377402a685d181df_1774738696.mp4';
-const VIDEO_MOBILE = '/kling_20260329_作品_Cinematic__4534_3.mp4';
 const LOGO_SRC = '/image_1774566475171_khgncb.png';
+
+// Mobile: pre-extracted JPG frames (40 frames, ~1.6MB total)
+const MOBILE_FRAME_PATH = '/mobile-hero-frames/ezgif-frame-';
+const MOBILE_FRAME_COUNT = 40;
 
 const DESKTOP_CONFIG = {
   frames: 60,
@@ -14,9 +17,8 @@ const DESKTOP_CONFIG = {
 };
 
 const MOBILE_CONFIG = {
-  frames: 30,
+  frames: MOBILE_FRAME_COUNT,
   scrollHeight: 300, // vh — snappier on touch
-  maxCanvasWidth: 540, // lightweight for mobile
 };
 
 export default function ScrollVideoHero({ onScrollToContact }) {
@@ -35,24 +37,54 @@ export default function ScrollVideoHero({ onScrollToContact }) {
   // Wait for isMobile to resolve (starts as undefined)
   const isMobileResolved = typeof isMobile === 'boolean';
   const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
-  const videoSrc = isMobile ? VIDEO_MOBILE : VIDEO_DESKTOP;
 
-  // Extract frames from video at load time
+  // Load frames — mobile: pre-extracted JPGs, desktop: extract from video
   useEffect(() => {
-    if (!isMobileResolved) return; // wait for mobile detection
+    if (!isMobileResolved) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    let cancelled = false;
 
+    if (isMobile) {
+      // Mobile: load pre-extracted JPG frames
+      const totalFrames = MOBILE_FRAME_COUNT;
+      const loadedFrames = new Array(totalFrames);
+      let loaded = 0;
+
+      const onAllLoaded = () => {
+        if (cancelled) return;
+        framesRef.current = loadedFrames;
+        canvas.width = loadedFrames[0].naturalWidth;
+        canvas.height = loadedFrames[0].naturalHeight;
+        ctx.drawImage(loadedFrames[0], 0, 0);
+        setIsReady(true);
+      };
+
+      for (let i = 0; i < totalFrames; i++) {
+        const img = new Image();
+        const num = String(i + 1).padStart(3, '0');
+        img.src = `${MOBILE_FRAME_PATH}${num}.jpg`;
+        img.onload = () => {
+          if (cancelled) return;
+          loadedFrames[i] = img;
+          loaded++;
+          setLoadProgress(Math.round((loaded / totalFrames) * 100));
+          if (loaded === totalFrames) onAllLoaded();
+        };
+      }
+
+      return () => { cancelled = true; };
+    }
+
+    // Desktop: extract frames from video
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
     video.preload = 'auto';
     video.crossOrigin = 'anonymous';
-    video.src = videoSrc;
-
-    let cancelled = false;
+    video.src = VIDEO_DESKTOP;
 
     const seekToTime = (time) =>
       new Promise((resolve) => {
@@ -70,7 +102,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       let w = video.videoWidth;
       let h = video.videoHeight;
 
-      // Scale down to save memory and speed up extraction
       if (config.maxCanvasWidth && w > config.maxCanvasWidth) {
         const scale = config.maxCanvasWidth / w;
         w = Math.round(w * scale);
@@ -80,7 +111,6 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       canvas.width = w;
       canvas.height = h;
 
-      // Offscreen canvas for frame extraction — keeps display canvas clean
       const offscreen = document.createElement('canvas');
       offscreen.width = w;
       offscreen.height = h;
@@ -103,10 +133,8 @@ export default function ScrollVideoHero({ onScrollToContact }) {
         setLoadProgress(Math.round((extracted / totalFrames) * 100));
       }
 
-      // Fill gaps with nearest extracted frame for immediate use
       for (let i = 0; i < totalFrames; i++) {
         if (!sparseFrames[i]) {
-          // Find nearest extracted frame
           const prev = i - (i % step);
           sparseFrames[i] = sparseFrames[prev];
         }
@@ -116,10 +144,10 @@ export default function ScrollVideoHero({ onScrollToContact }) {
       ctx.drawImage(sparseFrames[0], 0, 0, w, h);
       setIsReady(true);
 
-      // Phase 2: Fill in remaining frames in the background
+      // Phase 2: Fill remaining frames in background
       for (let i = 0; i < totalFrames; i++) {
         if (cancelled) return;
-        if (i % step === 0) continue; // already extracted
+        if (i % step === 0) continue;
         await seekToTime((i / (totalFrames - 1)) * duration);
         offCtx.drawImage(video, 0, 0, w, h);
         framesRef.current[i] = await createImageBitmap(offscreen);
